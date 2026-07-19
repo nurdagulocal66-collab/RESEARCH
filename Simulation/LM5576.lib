@@ -1,0 +1,52 @@
+* LM5576 75V, 3A Step-Down Switching Regulator SPICE Model
+* Pinout: 
+* 1:SYNC 2:SS 3:RT 4:COMP 5:FB 6:VIN 7:SW 8:BOOT 9:VCC 10:GND
+.SUBCKT LM5576 SYNC SS RT COMP FB VIN SW BOOT VCC GND
+*
+* --- Internal LDO Voltage Regulator (VCC = ~7V) ---
+E_VCC_LDO N_VCC_INT GND VALUE = { IF(V(VIN, GND) > 7.3, 7.0, IF(V(VIN, GND) > 1.0, V(VIN, GND) - 0.3, 0.0)) }
+R_VCC_OUT N_VCC_INT VCC 2.5
+C_VCC_BYP VCC GND 1uF
+*
+* --- UVLO and Enable threshold (VIN UVLO = ~6V) ---
+S_UVLO VCC GND VIN GND SW_UVLO_MOD
+.MODEL SW_UVLO_MOD VSWITCH(VON=5.8 VOFF=5.5 RON=1G ROFF=1m)
+*
+* --- Internal Reference Voltage (1.225V) ---
+V_REF N_REF GND DC 1.225
+*
+* --- Oscillator & RT Frequency Set (50kHz to 500kHz) ---
+V_RT_BIAS RT GND DC 2.0
+G_OSC GND N_RAMP VALUE = { I(V_RT_BIAS) * 1.5 }
+C_RAMP N_RAMP GND 100pF IC=0V
+R_RAMP_RESET N_RAMP GND 100M
+*
+* --- Error Amplifier (Wide Bandwidth Transconductance Amp) ---
+G_ERR GND N_COMP_INT FB N_REF 1.2m
+R_ERR_OUT N_COMP_INT GND 5Meg
+C_ERR_OUT N_COMP_INT GND 15pF
+R_COMP_EXT N_COMP_INT COMP 1m
+*
+* --- Soft Start (SS Pin Current Source = 10uA) ---
+I_SS VCC SS DC 10u
+R_SS_LEAK SS GND 100Meg
+*
+* --- PWM Comparator & Emulated Current Mode Control ---
+E_COMP_CLAMP N_COMP_EFF GND VALUE = { MIN(V(COMP, GND), V(SS, GND)) }
+E_PWM_COMP N_PWM GND VALUE = { IF( V(N_COMP_EFF, GND) > (V(N_RAMP, GND) + 0.5), 5.0, 0.0 ) }
+*
+* --- Bootstrapping and Gate Driver ---
+R_BOOT BOOT N_GATE 2.0
+E_GATE N_GATE SW VALUE = { IF( V(N_PWM, GND) > 2.5, IF(V(BOOT, SW) > 3.0, V(BOOT, SW), 0.0), 0.0 ) }
+*
+* --- Internal 75V, 170mOhm N-Channel Power MOSFET ---
+M_SW SW N_GATE VIN VIN N_MOS_MOD
+.MODEL N_MOS_MOD NMOS(VTO=2.0 KP=10.0 RDS=0.17 CISS=350p COSS=120p CRSS=40p)
+*
+* --- Internal Diodes & Protection ---
+D_SUB GND SW D_SUB_MOD
+.MODEL D_SUB_MOD D(IS=1e-12 RS=0.05 N=1.1)
+D_BOOT VCC BOOT D_BOOT_MOD
+.MODEL D_BOOT_MOD D(IS=1e-11 RS=0.5 VJ=0.6)
+*
+.ENDS LM5576

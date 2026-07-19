@@ -1,0 +1,26 @@
+Version 4
+SymbolType CELL
+LINE Normal -64 -64 64 -64
+LINE Normal 64 -64 64 64
+LINE Normal 64 64 -64 64
+LINE Normal -64 64 -64 -64
+WINDOW 0 0 -88 Center 2
+WINDOW 3 0 88 Center 2
+SYMATTR Prefix X
+SYMATTR Value XL7015
+SYMATTR Description XL7015 simplified buck regulator model
+PIN -96 -32 LEFT 8
+PINATTR PinName VIN
+PINATTR SpiceOrder 1
+PIN 96 -32 RIGHT 8
+PINATTR PinName SW
+PINATTR SpiceOrder 2
+PIN 0 96 BOTTOM 8
+PINATTR PinName GND
+PINATTR SpiceOrder 3
+PIN -96 32 LEFT 8
+PINATTR PinName FB
+PINATTR SpiceOrder 4
+PIN 0 -96 TOP 8
+PINATTR PinName EN
+PINATTR SpiceOrder 5

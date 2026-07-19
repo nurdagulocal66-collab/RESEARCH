@@ -1,0 +1,42 @@
+* XL7015 simplified behavioral LTspice model
+* Educational / functional model - NOT an official XLSEMI transistor-level model.
+* Pin order: VIN SW GND FB EN
+* Main modeled behavior:
+* - 150 kHz PWM
+* - 1.25 V feedback regulation
+* - 90% maximum duty cycle
+* - EN low = ON, EN high = OFF
+* - approximate internal switch loss and quiescent current
+*
+.SUBCKT XL7015 VIN SW GND FB EN
+
+* EN defaults low if left floating
+R_EN_PULLDOWN EN GND 1Meg
+
+* Approximate supply current
+B_IQ VIN GND I=IF(V(EN,GND)>0.8,85u,2.5m)
+
+* Error amplifier and loop filtering
+* Duty command is limited between 0 and 90%
+B_ERROR NERR GND V=LIMIT(50*(1.25-V(FB,GND)),0,0.90)
+R_LOOP NERR NDUTY 4.7k
+C_LOOP NDUTY GND 22n IC=0.90
+
+* 150 kHz sawtooth, 0...1 V
+B_SAW NSAW GND V=MOD(TIME*150k,1)
+
+* PWM gate:
+* VIN below 5 V -> OFF
+* EN above 0.8 V -> OFF
+B_GATE NGATE GND V=IF(V(VIN,GND)<5,0,IF(V(EN,GND)>0.8,0,IF(V(NDUTY)>V(NSAW),5,0)))
+
+* Approximate internal high-side power switch
+R_SWITCH_LOSS VIN NINT 1.5
+S_MAIN NINT SW NGATE GND SW_XL7015
+
+.MODEL SW_XL7015 SW(Ron=0.12 Roff=1G Vt=2.5 Vh=0.1)
+
+.ENDS XL7015
+
+* Approximate S310 / 3 A, 100 V Schottky diode model
+.MODEL S310 D(Is=5u Rs=0.08 N=1.05 Cjo=180p M=0.40 Vj=0.35 Bv=100 Ibv=100u Tt=20n)
