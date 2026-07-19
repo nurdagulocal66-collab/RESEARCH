@@ -1,0 +1,9 @@
+# LTspice gereksiz dosyaları
+*.raw
+*.log
+*.op.raw
+*.net
+
+# Windows sistem dosyaları
+Thumbs.db
+desktop.ini
